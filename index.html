@@ -14,7 +14,7 @@
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://azalhoseinian.github.io">
 <meta property="og:title" content="Azal Hosseinian — Software Engineer · AI in Healthcare">
-<meta property="og:description" content="Software engineer focused on AI in healthcare — digital twins, personalized care, and intelligent systems.">
+<meta property="og:description" content="Building and exploring intelligent systems for healthcare.">
 <meta property="og:image" content="https://avatars.githubusercontent.com/u/51117788?v=4">
 <meta property="og:locale" content="en_US">
 <meta name="twitter:card" content="summary">
@@ -43,6 +43,7 @@
   --grid-line:  rgba(255,255,255,.028);
   --accent:     #52c4ab;
   --accent-dim: rgba(82,196,171,.13);
+  --accent-ghost: rgba(82,196,171,.30);
   --live:       #4ade80;
   --shadow:     0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.28);
 
@@ -67,38 +68,32 @@ html[data-theme="light"] {
   --grid-line:  rgba(0,0,0,.032);
   --accent:     #0d7d68;
   --accent-dim: rgba(13,125,104,.10);
+  --accent-ghost: rgba(13,125,104,.32);
   --live:       #16a34a;
   --shadow:     0 1px 2px rgba(0,0,0,.05), 0 12px 28px rgba(0,0,0,.06);
 }
 
-/* Persian typography */
-html[lang="fa"] {
-  --sans: Vazirmatn, Inter, "Segoe UI", Tahoma, sans-serif;
-}
+html[lang="fa"] { --sans: Vazirmatn, Inter, "Segoe UI", Tahoma, sans-serif; }
 html[lang="fa"] body { line-height: 1.95; letter-spacing: 0; }
 
-/* JetBrains Mono carries no Persian glyphs, so Persian label text falls back
-   with broken metrics. Persian labels use the sans face; purely numeric or
-   Latin labels (indices, years, EN/FA) stay monospaced. */
+/* JetBrains Mono has no Persian glyphs. Persian labels take the sans face;
+   numeric and Latin labels stay monospaced. */
 html[lang="fa"] .mono,
 html[lang="fa"] .pill,
-html[lang="fa"] .hero .kicker,
+html[lang="fa"] .kicker,
 html[lang="fa"] .chip,
-html[lang="fa"] .log-state,
-html[lang="fa"] .motto {
+html[lang="fa"] .trail,
+html[lang="fa"] .fstep b,
+html[lang="fa"] .motto,
+html[lang="fa"] .node-tag {
   font-family: var(--sans);
   letter-spacing: 0;
   text-transform: none;
 }
 html[lang="fa"] .chip-year,
-html[lang="fa"] .focus-cell .tick,
-html[lang="fa"] .step .n,
+html[lang="fa"] .tick,
 html[lang="fa"] .seg button,
-html[lang="fa"] .filters .count,
-html[lang="fa"] .log-date,
-html[lang="fa"] .log-year {
-  font-family: var(--mono);
-}
+html[lang="fa"] .log-year { font-family: var(--mono); }
 
 /* ══════════════════════════════════════════════════════════════
    BASE
@@ -107,7 +102,7 @@ html[lang="fa"] .log-year {
 
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: 90px;
+  scroll-padding-top: 86px;
   overflow-x: hidden;
 }
 
@@ -130,11 +125,7 @@ ul { list-style: none; margin: 0; padding: 0; }
 
 ::selection { background: var(--accent); color: var(--bg); }
 
-:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 3px;
-  border-radius: 3px;
-}
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 3px; }
 
 .skip {
   position: absolute;
@@ -155,16 +146,14 @@ ul { list-style: none; margin: 0; padding: 0; }
 }
 
 /* ══════════════════════════════════════════════════════════════
-   BACKDROP — faint technical grid, drifting slowly
+   BACKDROP
    ══════════════════════════════════════════════════════════════ */
 .backdrop {
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  /* required: the layers below are wider than the viewport, and a fixed
-     element is not clipped by overflow on <body> */
-  overflow: hidden;
+  overflow: hidden;      /* the layers below exceed the viewport */
 }
 .backdrop::before {
   content: "";
@@ -185,12 +174,12 @@ ul { list-style: none; margin: 0; padding: 0; }
   width: 120vw; height: 80vh;
   transform: translateX(-50%);
   background: radial-gradient(ellipse at center, var(--accent-dim), transparent 62%);
-  opacity: .55;
+  opacity: .5;
 }
 @keyframes drift { to { transform: translate3d(68px, 68px, 0); } }
 
 /* ══════════════════════════════════════════════════════════════
-   LAYOUT
+   LAYOUT PRIMITIVES
    ══════════════════════════════════════════════════════════════ */
 .wrap {
   width: 100%;
@@ -201,15 +190,14 @@ ul { list-style: none; margin: 0; padding: 0; }
 
 main { position: relative; z-index: 1; }
 
-.band { padding-block: clamp(4rem, 9vw, 7rem); }
+.band { padding-block: clamp(3.75rem, 8vw, 6.5rem); }
 .band + .band { border-top: 1px solid var(--line); }
 
-/* section heading: mono index + title, editorial rule */
 .band-head {
   display: flex;
   align-items: baseline;
   gap: .9rem;
-  margin-bottom: clamp(1.75rem, 4vw, 2.75rem);
+  margin-bottom: 1.5rem;
 }
 .band-head .idx {
   font-family: var(--mono);
@@ -222,20 +210,16 @@ main { position: relative; z-index: 1; }
   margin: 0;
   font-size: clamp(1.15rem, 2.6vw, 1.4rem);
   font-weight: 600;
-  letter-spacing: -.02em;
+  letter-spacing: -.025em;
 }
-.band-head .rule {
-  flex: 1;
-  height: 1px;
-  background: var(--line);
-  transform: translateY(-.35em);
-}
+.band-head .rule { flex: 1; height: 1px; background: var(--line); transform: translateY(-.35em); }
 
+/* one short line, never a paragraph */
 .lede {
-  max-width: 62ch;
+  max-width: 54ch;
   color: var(--text-2);
-  font-size: clamp(.97rem, 1.9vw, 1.05rem);
-  margin: 0 0 2rem;
+  font-size: .96rem;
+  margin: 0 0 2.25rem;
 }
 
 .mono {
@@ -245,7 +229,6 @@ main { position: relative; z-index: 1; }
   text-transform: uppercase;
   color: var(--text-3);
 }
-html[lang="fa"] .mono { letter-spacing: .04em; }
 
 /* ══════════════════════════════════════════════════════════════
    HEADER
@@ -258,10 +241,7 @@ header {
   border-bottom: 1px solid transparent;
   transition: border-color .3s var(--ease), background .3s var(--ease);
 }
-header.stuck {
-  border-bottom-color: var(--line);
-  background: var(--bg-sunk);
-}
+header.stuck { border-bottom-color: var(--line); background: var(--bg-sunk); }
 @supports (backdrop-filter: blur(1px)) {
   header.stuck {
     background: transparent;
@@ -273,49 +253,35 @@ header.stuck {
     position: absolute;
     inset: 0;
     background: var(--bg);
-    opacity: .82;
+    opacity: .84;
     z-index: -1;
   }
 }
 
-.bar {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  height: 62px;
-}
+.bar { display: flex; align-items: center; gap: 1rem; height: 60px; }
 
 .brand {
   display: inline-flex;
   align-items: center;
   gap: .6rem;
   font-weight: 600;
-  font-size: .92rem;
+  font-size: .9rem;
   letter-spacing: -.02em;
   flex: none;
 }
-.brand svg { width: 22px; height: 22px; flex: none; }
+.brand svg { width: 21px; height: 21px; flex: none; }
 
-.nav-links {
-  display: flex;
-  gap: .15rem;
-  margin-inline: auto;
-}
+.nav-links { display: flex; gap: .1rem; margin-inline: auto; }
 .nav-links a {
-  padding: .45rem .7rem;
+  padding: .45rem .68rem;
   border-radius: 7px;
-  font-size: .85rem;
+  font-size: .84rem;
   color: var(--text-2);
   transition: color .2s var(--ease), background .2s var(--ease);
 }
 .nav-links a:hover { color: var(--text); background: var(--surface-hi); }
 
-.bar-tools {
-  display: flex;
-  align-items: center;
-  gap: .4rem;
-  flex: none;
-}
+.bar-tools { display: flex; align-items: center; gap: .4rem; flex: none; }
 
 .seg {
   display: inline-flex;
@@ -325,10 +291,10 @@ header.stuck {
   background: var(--surface);
 }
 .seg button {
-  padding: .3rem .55rem;
+  padding: .3rem .52rem;
   border-radius: 6px;
   font-family: var(--mono);
-  font-size: .68rem;
+  font-size: .67rem;
   letter-spacing: .06em;
   color: var(--text-3);
   transition: color .2s var(--ease), background .2s var(--ease);
@@ -351,18 +317,30 @@ header.stuck {
 html[data-theme="light"] .i-moon { display: none; }
 html:not([data-theme="light"]) .i-sun { display: none; }
 
-@media (max-width: 780px) {
-  .nav-links { display: none; }
-  .bar-tools { margin-inline-start: auto; }
+/* GitHub CTA in the header */
+.gh-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  height: 32px;
+  padding-inline: .8rem;
+  border-radius: 8px;
+  background: var(--text);
+  color: var(--bg);
+  font-size: .8rem;
+  font-weight: 500;
+  transition: opacity .2s var(--ease);
 }
+.gh-cta:hover { opacity: .85; }
+.gh-cta svg { width: 14px; height: 14px; }
+
+@media (max-width: 900px) { .nav-links { display: none; } .bar-tools { margin-inline-start: auto; } }
+@media (max-width: 520px) { .gh-cta span { display: none; } .gh-cta { padding-inline: .6rem; } }
 
 /* ══════════════════════════════════════════════════════════════
-   HERO
+   HERO — one screen, no paragraphs
    ══════════════════════════════════════════════════════════════ */
-.hero {
-  padding-block: clamp(4rem, 12vw, 8.5rem) clamp(3.5rem, 8vw, 6rem);
-  position: relative;
-}
+.hero { padding-block: clamp(3.5rem, 11vw, 7rem) clamp(3rem, 7vw, 5rem); }
 
 .pill {
   display: inline-flex;
@@ -373,19 +351,12 @@ html:not([data-theme="light"]) .i-sun { display: none; }
   border-radius: 999px;
   background: var(--surface);
   font-family: var(--mono);
-  font-size: .68rem;
+  font-size: .67rem;
   letter-spacing: .07em;
   color: var(--text-2);
   text-transform: uppercase;
 }
-html[lang="fa"] .pill { letter-spacing: 0; text-transform: none; font-size: .74rem; }
-.beacon {
-  position: relative;
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: var(--live);
-  flex: none;
-}
+.beacon { position: relative; width: 6px; height: 6px; border-radius: 50%; background: var(--live); flex: none; }
 .beacon::after {
   content: "";
   position: absolute;
@@ -401,52 +372,40 @@ html[lang="fa"] .pill { letter-spacing: 0; text-transform: none; font-size: .74r
 }
 
 .hero h1 {
-  margin: 1.5rem 0 0;
-  font-size: clamp(2.6rem, 8vw, 4.5rem);
+  margin: 1.4rem 0 .55rem;
+  font-size: clamp(2.7rem, 8.5vw, 4.6rem);
   font-weight: 700;
-  line-height: 1.03;
-  letter-spacing: -.045em;
+  line-height: 1.02;
+  letter-spacing: -.048em;
 }
 html[lang="fa"] .hero h1 { letter-spacing: -.01em; line-height: 1.25; }
 
-.hero .kicker {
-  margin: 1rem 0 0;
+.kicker {
+  margin: 0;
   font-family: var(--mono);
-  font-size: clamp(.85rem, 2vw, 1rem);
+  font-size: clamp(.84rem, 1.9vw, .98rem);
   font-weight: 500;
-  letter-spacing: .02em;
+  letter-spacing: .01em;
   color: var(--accent);
 }
 
-.hero .tagline {
-  margin: 1.6rem 0 0;
-  font-size: clamp(1.2rem, 3vw, 1.65rem);
+.tagline {
+  margin: 1.5rem 0 0;
+  font-size: clamp(1.25rem, 3.1vw, 1.75rem);
   font-weight: 500;
-  line-height: 1.4;
-  letter-spacing: -.025em;
-  max-width: 20ch;
+  line-height: 1.35;
+  letter-spacing: -.03em;
+  max-width: 19ch;
 }
-html[lang="fa"] .hero .tagline { letter-spacing: 0; max-width: 24ch; }
+html[lang="fa"] .tagline { letter-spacing: 0; max-width: 23ch; }
 
-.hero .stance {
-  margin: 1.35rem 0 0;
-  max-width: 54ch;
-  color: var(--text-2);
-  font-size: clamp(.97rem, 2vw, 1.06rem);
-}
-
-.cta-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: .65rem;
-  margin-top: 2.4rem;
-}
+.cta-row { display: flex; flex-wrap: wrap; gap: .65rem; margin-top: 2.1rem; }
 
 .btn {
   display: inline-flex;
   align-items: center;
   gap: .55rem;
-  padding: .7rem 1.2rem;
+  padding: .72rem 1.2rem;
   border: 1px solid var(--line);
   border-radius: 9px;
   font-size: .89rem;
@@ -458,38 +417,82 @@ html[lang="fa"] .hero .tagline { letter-spacing: 0; max-width: 24ch; }
 .btn svg { width: 15px; height: 15px; flex: none; }
 .btn .chev { transition: transform .25s var(--ease); }
 .btn:hover .chev { transform: translateX(3px); }
-html[dir="rtl"] .btn:hover .chev { transform: translateX(-3px); }
 html[dir="rtl"] .btn .chev { transform: scaleX(-1); }
 html[dir="rtl"] .btn:hover .chev { transform: scaleX(-1) translateX(3px); }
 
-.btn-solid {
-  background: var(--text);
-  color: var(--bg);
-  border-color: transparent;
-}
+.btn-solid { background: var(--text); color: var(--bg); border-color: transparent; }
 .btn-solid:hover { box-shadow: var(--shadow); }
 .btn-line { background: var(--surface); }
 .btn-line:hover { border-color: var(--line-hi); background: var(--surface-hi); }
 
-.hero-meta {
+/* trajectory strip — the site's identity in three words */
+.trail {
   display: flex;
   flex-wrap: wrap;
-  gap: 1.75rem;
-  margin-top: clamp(3rem, 7vw, 4.5rem);
-  padding-top: 1.5rem;
+  align-items: center;
+  gap: .55rem;
+  margin-top: clamp(2.75rem, 6vw, 4rem);
+  padding-top: 1.4rem;
   border-top: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: .68rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text-3);
 }
-.hero-meta div { min-width: 0; }
-.hero-meta dt { margin-bottom: .3rem; }
-.hero-meta dd { margin: 0; font-size: .92rem; color: var(--text-2); }
+.trail i { font-style: normal; color: var(--line-hi); }
+.trail b { font-weight: 500; color: var(--accent); }
 
 /* ══════════════════════════════════════════════════════════════
-   FOCUS
+   FOCUS — research map: one active node, satellites beneath
    ══════════════════════════════════════════════════════════════ */
-/* Hairlines are drawn per-cell with negative margins rather than by a grid
-   background, so a partly-filled last row leaves no visible empty boxes —
-   the count of focus areas can change freely. */
-.focus-grid {
+.node-primary {
+  position: relative;
+  padding: 1.5rem 1.6rem;
+  border: 1px solid var(--line);
+  border-inline-start: 2px solid var(--accent);
+  border-radius: 12px;
+  background: var(--accent-dim);
+}
+.node-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  font-family: var(--mono);
+  font-size: .64rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.node-primary h3 {
+  margin: .45rem 0 .3rem;
+  font-size: clamp(1.3rem, 3.4vw, 1.7rem);
+  font-weight: 600;
+  letter-spacing: -.032em;
+}
+html[lang="fa"] .node-primary h3 { letter-spacing: -.005em; }
+.node-primary > p { margin: 0; color: var(--text-2); font-size: .95rem; }
+
+.node-deeper {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .45rem;
+  margin-top: 1.1rem;
+  padding-top: .9rem;
+  border-top: 1px solid var(--accent-ghost);
+}
+.node-deeper .mono { color: var(--accent); opacity: .85; }
+.node-deeper em { font-style: normal; font-size: .87rem; color: var(--text); }
+
+/* connector from the active node into the satellite grid */
+.connector { display: grid; place-items: center; height: 34px; }
+.connector span {
+  width: 1px; height: 100%;
+  background: linear-gradient(var(--accent-ghost), var(--line));
+}
+
+.map {
   display: grid;
   grid-template-columns: 1fr;
   border: 1px solid var(--line);
@@ -497,12 +500,23 @@ html[dir="rtl"] .btn:hover .chev { transform: scaleX(-1) translateX(3px); }
   overflow: hidden;
   background: var(--bg);
 }
-@media (min-width: 620px)  { .focus-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 1000px) { .focus-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 620px)  { .map { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1000px) { .map { grid-template-columns: repeat(3, 1fr); } }
 
-.focus-cell {
+/* A trailing item stretches across the columns it would otherwise leave
+   blank, so the grid stays flush whatever the number of focus areas. */
+@media (min-width: 620px) and (max-width: 999px) {
+  .map .node:last-child:nth-child(2n + 1) { grid-column: span 2; }
+}
+@media (min-width: 1000px) {
+  .map .node:last-child:nth-child(3n + 1) { grid-column: span 3; }
+  .map .node:last-child:nth-child(3n + 2) { grid-column: span 2; }
+}
+
+/* hairlines per cell, so a partly filled last row leaves no empty boxes */
+.node {
   position: relative;
-  padding: 1.35rem 1.4rem;
+  padding: 1.2rem 1.35rem;
   background: var(--bg);
   border-block-start: 1px solid var(--line);
   border-inline-start: 1px solid var(--line);
@@ -510,105 +524,81 @@ html[dir="rtl"] .btn:hover .chev { transform: scaleX(-1) translateX(3px); }
   margin-inline-start: -1px;
   transition: background .25s var(--ease);
 }
-.focus-cell:hover { background: var(--bg-raised); }
-.focus-cell h3 {
-  margin: 0 0 .35rem;
-  font-size: .97rem;
+.node:hover { background: var(--bg-raised); }
+.node h3 {
+  margin: 0 0 .25rem;
+  font-size: .95rem;
   font-weight: 600;
-  letter-spacing: -.015em;
+  letter-spacing: -.018em;
   display: flex;
   align-items: center;
   gap: .5rem;
 }
-.focus-cell p {
-  margin: 0;
-  font-size: .875rem;
-  color: var(--text-3);
-  line-height: 1.6;
-}
-.star {
-  width: 5px; height: 5px;
+.node h3::before {
+  content: "";
+  width: 4px; height: 4px;
   border-radius: 50%;
-  background: var(--accent);
+  background: var(--text-3);
   flex: none;
+  transition: background .25s var(--ease);
 }
-.focus-cell .tick {
+.node:hover h3::before { background: var(--accent); }
+.node p { margin: 0; font-size: .84rem; color: var(--text-3); }
+.tick {
   position: absolute;
-  inset-block-start: 1.4rem;
-  inset-inline-end: 1.4rem;
+  inset-block-start: 1.25rem;
+  inset-inline-end: 1.35rem;
   font-family: var(--mono);
-  font-size: .62rem;
+  font-size: .61rem;
   color: var(--text-3);
-  opacity: .55;
+  opacity: .5;
 }
 
 /* ══════════════════════════════════════════════════════════════
    WORK
    ══════════════════════════════════════════════════════════════ */
-.filters {
-  display: flex;
-  gap: .4rem;
-  margin-bottom: 1.5rem;
-  overflow-x: auto;
-  padding-bottom: 2px;
-  scrollbar-width: none;
-}
-.filters::-webkit-scrollbar { display: none; }
-.filters button {
-  flex: none;
-  padding: .4rem .85rem;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  font-size: .8rem;
-  color: var(--text-2);
-  background: var(--surface);
-  transition: color .2s var(--ease), border-color .2s var(--ease), background .2s var(--ease);
-}
-.filters button:hover { color: var(--text); border-color: var(--line-hi); }
-.filters button[aria-pressed="true"] {
-  color: var(--bg);
-  background: var(--text);
-  border-color: transparent;
-}
-.filters .count {
+.group + .group { margin-top: 2.75rem; }
+.group-head { display: flex; align-items: center; gap: .75rem; margin-bottom: 1rem; }
+.group-head h3 {
+  margin: 0;
   font-family: var(--mono);
-  font-size: .66rem;
-  opacity: .6;
-  margin-inline-start: .4rem;
+  font-size: .68rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  flex: none;
 }
+html[lang="fa"] .group-head h3 {
+  font-family: var(--sans);
+  letter-spacing: 0;
+  text-transform: none;
+  font-size: .82rem;
+}
+.group-head .rule { flex: 1; height: 1px; background: var(--line); }
+.group-head .n { font-family: var(--mono); font-size: .68rem; color: var(--text-3); opacity: .6; }
 
-.cards { display: grid; gap: .75rem; }
+.cards { display: grid; gap: .7rem; }
 
 .card {
   display: block;
-  position: relative;
-  padding: 1.4rem 1.5rem;
+  padding: 1.3rem 1.45rem;
   border: 1px solid var(--line);
   border-radius: 12px;
   background: var(--bg-raised);
-  transition: border-color .25s var(--ease), transform .25s var(--ease),
-              box-shadow .25s var(--ease);
+  transition: border-color .25s var(--ease), transform .25s var(--ease), box-shadow .25s var(--ease);
 }
-.card:hover {
-  border-color: var(--line-hi);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow);
-}
+.card:hover { border-color: var(--line-hi); transform: translateY(-2px); box-shadow: var(--shadow); }
+.card.is-featured { border-inline-start: 2px solid var(--accent); }
 
-.card-top {
-  display: flex;
-  align-items: center;
-  gap: .75rem;
-  margin-bottom: .5rem;
-}
-.card h3 {
+.card-top { display: flex; align-items: center; gap: .75rem; margin-bottom: .45rem; }
+.card h4 {
   margin: 0;
-  font-size: 1.02rem;
+  font-size: 1rem;
   font-weight: 600;
-  letter-spacing: -.02em;
+  letter-spacing: -.022em;
   transition: color .2s var(--ease);
 }
-.card:hover h3 { color: var(--accent); }
+.card:hover h4 { color: var(--accent); }
 .card .go {
   margin-inline-start: auto;
   color: var(--text-3);
@@ -621,196 +611,216 @@ html[dir="rtl"] .btn:hover .chev { transform: scaleX(-1) translateX(3px); }
 html[dir="rtl"] .card .go svg { transform: scaleX(-1); }
 html[dir="rtl"] .card:hover .go { transform: translate(-2px, -2px); }
 
-.card p {
-  margin: 0 0 .85rem;
-  font-size: .9rem;
-  color: var(--text-2);
-  max-width: 62ch;
-}
+.card p { margin: 0 0 .8rem; font-size: .89rem; color: var(--text-2); max-width: 62ch; }
 .card p:last-child { margin-bottom: 0; }
 
-.meta-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: .4rem;
-}
+.meta-row { display: flex; flex-wrap: wrap; align-items: center; gap: .38rem; }
 .chip {
   padding: .18rem .5rem;
   border: 1px solid var(--line);
   border-radius: 5px;
   font-family: var(--mono);
-  font-size: .64rem;
+  font-size: .63rem;
   letter-spacing: .03em;
   color: var(--text-3);
 }
 .chip-year { border-color: transparent; background: var(--surface-hi); }
-.chip-cat { color: var(--accent); border-color: var(--accent-dim); background: var(--accent-dim); }
+.chip-cat { color: var(--accent); border-color: var(--accent-ghost); background: var(--accent-dim); }
+.chip-status { color: var(--text-2); }
 
-/* empty state — honest placeholder, no fake content */
-.empty {
-  padding: 2.25rem 1.5rem;
+/* honest placeholder — reads as a beginning, not a gap */
+.awaiting {
+  padding: 2rem 1.6rem;
   border: 1px dashed var(--line-hi);
   border-radius: 12px;
-  text-align: center;
   background: var(--surface);
 }
-.empty .mark {
-  display: grid;
-  place-items: center;
-  width: 34px; height: 34px;
-  margin: 0 auto .9rem;
-  border: 1px solid var(--line);
-  border-radius: 9px;
-  color: var(--text-3);
-}
-.empty .mark svg { width: 16px; height: 16px; }
-.empty p {
-  margin: 0 auto;
-  max-width: 44ch;
-  font-size: .9rem;
-  color: var(--text-3);
-}
+.awaiting .mono { display: block; margin-bottom: .5rem; color: var(--accent); opacity: .9; }
+.awaiting p { margin: 0; max-width: 48ch; font-size: .92rem; color: var(--text-2); }
 
 /* ══════════════════════════════════════════════════════════════
-   EXPERIMENTS — dated log, ready to fill
+   RESEARCH LOG
    ══════════════════════════════════════════════════════════════ */
-.log { display: grid; gap: 0; }
+.log { position: relative; padding-inline-start: 1.75rem; }
+.log::before {
+  content: "";
+  position: absolute;
+  inset-block: .55rem 0;
+  inset-inline-start: 5px;
+  width: 1px;
+  background: linear-gradient(var(--line-hi), var(--line) 55%, transparent);
+}
+
 .log-year {
+  position: relative;
   font-family: var(--mono);
   font-size: .7rem;
-  color: var(--text-3);
-  letter-spacing: .1em;
-  padding-block: .9rem;
-  border-bottom: 1px solid var(--line);
+  letter-spacing: .12em;
+  color: var(--accent);
+  margin-bottom: 1rem;
 }
+.log-year::before {
+  content: "";
+  position: absolute;
+  inset-block-start: .4rem;
+  inset-inline-start: -1.75rem;
+  width: 11px; height: 11px;
+  border: 1px solid var(--accent);
+  border-radius: 50%;
+  background: var(--bg);
+}
+
 .log-item {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: .3rem;
-  padding-block: 1.15rem;
-  border-bottom: 1px solid var(--line);
-  transition: background .2s var(--ease);
+  position: relative;
+  padding-block: 1.05rem;
+  border-block-end: 1px solid var(--line);
+}
+.log-item::before {
+  content: "";
+  position: absolute;
+  inset-block-start: 1.5rem;
+  inset-inline-start: -1.75rem;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--text-3);
 }
 @media (min-width: 700px) {
-  .log-item { grid-template-columns: 110px 1fr auto; gap: 1.25rem; align-items: baseline; }
+  .log-item { display: grid; grid-template-columns: 96px 1fr auto; gap: 1.25rem; align-items: baseline; }
 }
-.log-item:hover { background: var(--surface); }
-.log-date { font-family: var(--mono); font-size: .72rem; color: var(--text-3); }
-.log-body h3 { margin: 0 0 .25rem; font-size: .97rem; font-weight: 600; letter-spacing: -.015em; }
-.log-body p { margin: 0; font-size: .88rem; color: var(--text-2); max-width: 60ch; }
+.log-date { font-family: var(--mono); font-size: .71rem; color: var(--text-3); }
+.log-body h4 { margin: 0 0 .2rem; font-size: .96rem; font-weight: 600; letter-spacing: -.018em; }
+.log-body p { margin: 0; font-size: .87rem; color: var(--text-2); max-width: 58ch; }
 .log-state {
   font-family: var(--mono);
-  font-size: .64rem;
+  font-size: .63rem;
   letter-spacing: .06em;
   color: var(--text-3);
   text-transform: uppercase;
 }
 
 /* ══════════════════════════════════════════════════════════════
-   DIRECTION
+   FLOW — the working loop, the site's visual signature
    ══════════════════════════════════════════════════════════════ */
-.split {
-  display: grid;
-  gap: clamp(2rem, 5vw, 3.5rem);
-  grid-template-columns: 1fr;
-}
-@media (min-width: 860px) { .split { grid-template-columns: 1fr 1fr; } }
+.flow { display: grid; grid-template-columns: 1fr; position: relative; }
+@media (min-width: 780px) { .flow { grid-template-columns: repeat(6, 1fr); } }
 
-.split .prose p {
-  margin: 0 0 1.1rem;
-  color: var(--text-2);
-  font-size: clamp(.97rem, 1.9vw, 1.04rem);
-}
-.split .prose p:last-child { margin-bottom: 0; }
-.split .prose strong { color: var(--text); font-weight: 500; }
+.fstep { position: relative; padding-block: .85rem; padding-inline-start: 1.6rem; }
+@media (min-width: 780px) { .fstep { padding-inline: .6rem 0; padding-block: 2rem 0; } }
 
-.steps { display: grid; gap: 1px; background: var(--line); border-block: 1px solid var(--line); }
-.step {
-  display: flex;
-  gap: .9rem;
-  padding: 1.1rem .25rem;
+/* node */
+.fstep::before {
+  content: "";
+  position: absolute;
+  inset-block-start: 1.25rem;
+  inset-inline-start: 0;
+  width: 9px; height: 9px;
+  border: 1px solid var(--line-hi);
+  border-radius: 50%;
   background: var(--bg);
+  z-index: 1;
+  transition: border-color .25s var(--ease), background .25s var(--ease);
 }
-.step .n {
+@media (min-width: 780px) { .fstep::before { inset-block-start: 0; } }
+
+/* rail */
+.fstep::after {
+  content: "";
+  position: absolute;
+  inset-block-start: 1.25rem;
+  inset-inline-start: 4px;
+  width: 1px;
+  height: 100%;
+  background: var(--line);
+}
+@media (min-width: 780px) {
+  .fstep::after {
+    inset-block-start: 4px;
+    inset-inline-start: 9px;
+    width: 100%;
+    height: 1px;
+  }
+}
+.flow .fstep:last-child::after { display: none; }
+
+.fstep:hover::before { border-color: var(--accent); background: var(--accent-dim); }
+
+.fstep b {
+  display: block;
   font-family: var(--mono);
-  font-size: .68rem;
-  color: var(--accent);
-  padding-top: .2rem;
-  flex: none;
+  font-size: .69rem;
+  font-weight: 500;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+  color: var(--text);
 }
-.step h3 { margin: 0 0 .2rem; font-size: .95rem; font-weight: 600; letter-spacing: -.015em; }
-.step p { margin: 0; font-size: .86rem; color: var(--text-3); }
+.fstep span { display: block; margin-top: .2rem; font-size: .8rem; color: var(--text-3); }
+
+.loop-note {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  margin-top: 2.25rem;
+  font-family: var(--mono);
+  font-size: .66rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+html[lang="fa"] .loop-note {
+  font-family: var(--sans);
+  letter-spacing: 0;
+  text-transform: none;
+  font-size: .82rem;
+}
+.loop-note svg { width: 13px; height: 13px; color: var(--accent); flex: none; }
 
 /* ══════════════════════════════════════════════════════════════
    NOW
    ══════════════════════════════════════════════════════════════ */
-.now-grid {
-  display: grid;
-  gap: .55rem;
-  grid-template-columns: 1fr;
-}
-@media (min-width: 620px) { .now-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 980px) { .now-grid { grid-template-columns: repeat(3, 1fr); } }
-
-.now-item {
-  display: flex;
-  align-items: center;
-  gap: .7rem;
-  padding: .8rem 1rem;
-  border: 1px solid var(--line);
-  border-radius: 9px;
-  background: var(--surface);
-  font-size: .9rem;
-  transition: border-color .2s var(--ease), background .2s var(--ease);
-}
-.now-item:hover { border-color: var(--line-hi); background: var(--surface-hi); }
-.now-item .bar {
-  width: 2px; height: 15px;
-  border-radius: 2px;
-  background: var(--accent);
-  opacity: .65;
-  flex: none;
-}
-.stamp { margin-top: 1.5rem; }
-
-/* the single headline focus — the sentence the site is built around */
 .now-headline {
-  padding: 1.4rem 1.6rem;
-  margin-bottom: 1.75rem;
+  padding: 1.5rem 1.6rem;
+  margin-bottom: 1.5rem;
   border: 1px solid var(--line);
   border-inline-start: 2px solid var(--accent);
-  border-radius: 10px;
+  border-radius: 12px;
   background: var(--accent-dim);
 }
 .now-headline p {
   margin: .3rem 0 0;
-  font-size: clamp(1.35rem, 3.6vw, 1.85rem);
+  font-size: clamp(1.4rem, 3.8vw, 1.95rem);
   font-weight: 600;
-  letter-spacing: -.03em;
+  letter-spacing: -.035em;
 }
 html[lang="fa"] .now-headline p { letter-spacing: -.005em; }
 
-.now-also {
-  margin-top: 1.5rem;
-  padding-top: 1.25rem;
-  border-top: 1px solid var(--line);
+.now-grid { display: grid; gap: .5rem; grid-template-columns: 1fr; }
+@media (min-width: 620px) { .now-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 980px) { .now-grid { grid-template-columns: repeat(4, 1fr); } }
+
+.now-item {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  padding: .85rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+  font-size: .88rem;
+  transition: border-color .2s var(--ease), background .2s var(--ease);
 }
-.now-also p {
-  margin: .4rem 0 0;
-  font-size: .9rem;
-  color: var(--text-3);
-  max-width: 62ch;
-}
+.now-item:hover { border-color: var(--line-hi); background: var(--surface-hi); }
+.now-item .bar { width: 2px; height: 14px; border-radius: 2px; background: var(--accent); opacity: .7; flex: none; }
+
+.stamp { margin-top: 1.4rem; }
 
 /* ══════════════════════════════════════════════════════════════
    ABOUT + CLOSING
    ══════════════════════════════════════════════════════════════ */
-.about-wrap { display: grid; gap: 2rem; grid-template-columns: 1fr; align-items: start; }
-@media (min-width: 760px) { .about-wrap { grid-template-columns: auto 1fr; gap: 2.5rem; } }
+.about-wrap { display: grid; gap: 1.75rem; grid-template-columns: 1fr; align-items: start; }
+@media (min-width: 700px) { .about-wrap { grid-template-columns: auto 1fr; gap: 2.25rem; } }
 
 .avatar {
-  width: 84px; height: 84px;
+  width: 76px; height: 76px;
   border-radius: 12px;
   border: 1px solid var(--line);
   object-fit: cover;
@@ -819,28 +829,19 @@ html[lang="fa"] .now-headline p { letter-spacing: -.005em; }
 }
 .avatar:hover { filter: none; }
 
-.about-wrap .prose p {
-  margin: 0 0 1.05rem;
-  color: var(--text-2);
-  font-size: clamp(.97rem, 1.9vw, 1.04rem);
-  max-width: 60ch;
-}
-.about-wrap .prose p:last-child { margin-bottom: 0; }
-.about-wrap .prose strong { color: var(--text); font-weight: 500; }
+.prose p { margin: 0 0 .95rem; color: var(--text-2); font-size: .98rem; max-width: 56ch; }
+.prose p:last-child { margin-bottom: 0; }
+.prose strong { color: var(--text); font-weight: 500; }
 
-.closing {
-  text-align: center;
-  padding-block: clamp(4rem, 10vw, 7rem);
-  border-top: 1px solid var(--line);
-}
+.closing { text-align: center; padding-block: clamp(3.5rem, 9vw, 6rem); border-top: 1px solid var(--line); }
 .closing h2 {
-  margin: 1rem 0 .8rem;
-  font-size: clamp(1.7rem, 4.5vw, 2.5rem);
+  margin: 1rem 0 .7rem;
+  font-size: clamp(1.6rem, 4.2vw, 2.3rem);
   font-weight: 600;
-  letter-spacing: -.035em;
+  letter-spacing: -.04em;
 }
 html[lang="fa"] .closing h2 { letter-spacing: -.005em; }
-.closing p { margin: 0 auto 2rem; max-width: 46ch; color: var(--text-2); }
+.closing p { margin: 0 auto 1.9rem; max-width: 42ch; color: var(--text-2); font-size: .96rem; }
 .closing .cta-row { justify-content: center; }
 
 .motto {
@@ -848,30 +849,24 @@ html[lang="fa"] .closing h2 { letter-spacing: -.005em; }
   align-items: center;
   gap: .6rem;
   font-family: var(--mono);
-  font-size: .68rem;
-  letter-spacing: .07em;
+  font-size: .66rem;
+  letter-spacing: .09em;
   color: var(--text-3);
   text-transform: uppercase;
 }
-html[lang="fa"] .motto { text-transform: none; letter-spacing: 0; font-size: .74rem; }
-.motto span.sepdot { width: 3px; height: 3px; border-radius: 50%; background: var(--text-3); }
+.motto .sepdot { width: 3px; height: 3px; border-radius: 50%; background: var(--text-3); flex: none; }
 
 /* ══════════════════════════════════════════════════════════════
    FOOTER
    ══════════════════════════════════════════════════════════════ */
-footer {
-  position: relative;
-  z-index: 1;
-  border-top: 1px solid var(--line);
-  padding-block: 2rem 2.5rem;
-}
+footer { position: relative; z-index: 1; border-top: 1px solid var(--line); padding-block: 1.85rem 2.4rem; }
 .foot {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
   align-items: center;
   justify-content: space-between;
-  font-size: .8rem;
+  font-size: .79rem;
   color: var(--text-3);
 }
 .foot-links { display: flex; gap: 1.1rem; }
@@ -881,13 +876,8 @@ footer {
 /* ══════════════════════════════════════════════════════════════
    MOTION
    ══════════════════════════════════════════════════════════════ */
-[data-rise] {
-  opacity: 0;
-  transform: translateY(14px);
-}
-.ready [data-rise] {
-  transition: opacity .7s var(--ease), transform .7s var(--ease);
-}
+[data-rise] { opacity: 0; transform: translateY(14px); }
+.ready [data-rise] { transition: opacity .7s var(--ease), transform .7s var(--ease); }
 [data-rise].shown { opacity: 1; transform: none; }
 
 @media (prefers-reduced-motion: reduce) {
@@ -920,12 +910,11 @@ footer {
     </a>
 
     <nav class="nav-links" aria-label="Sections">
-      <a href="#focus"       data-i18n="nav.focus">Focus</a>
-      <a href="#work"        data-i18n="nav.work">Work</a>
-      <a href="#experiments" data-i18n="nav.experiments">Experiments</a>
-      <a href="#direction"   data-i18n="nav.direction">Direction</a>
-      <a href="#now"         data-i18n="nav.now">Now</a>
-      <a href="#about"       data-i18n="nav.about">About</a>
+      <a href="#focus"    data-i18n="nav.focus">Focus</a>
+      <a href="#work"     data-i18n="nav.work">Work</a>
+      <a href="#research" data-i18n="nav.research">Research</a>
+      <a href="#now"      data-i18n="nav.now">Now</a>
+      <a href="#about"    data-i18n="nav.about">About</a>
     </nav>
 
     <div class="bar-tools">
@@ -937,6 +926,10 @@ footer {
         <svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         <svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
       </button>
+      <a class="gh-cta" href="https://github.com/AzalHoseinian" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.8-1.6-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.4 11.4 0 0 1 6 0C17.7 5 18.7 5.3 18.7 5.3c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg>
+        <span>GitHub</span>
+      </a>
     </div>
   </div>
 </header>
@@ -956,16 +949,9 @@ footer {
 
       <p class="tagline" data-rise data-i18n="hero.tagline">Building and exploring intelligent systems for healthcare.</p>
 
-      <p class="stance" data-rise data-i18n="hero.stance">
-        Software engineer, Computer Software Engineering graduate, now working at the
-        intersection of AI and healthcare — digital twins, personalized care, and
-        intelligent systems. I pick a problem, build it, publish the code, and write
-        down what I learned. This site is the map. GitHub is the evidence.
-      </p>
-
       <div class="cta-row" data-rise>
         <a class="btn btn-solid" href="#work">
-          <span data-i18n="hero.cta1">Explore my work</span>
+          <span data-i18n="hero.cta1">Explore work</span>
           <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
         </a>
         <a class="btn btn-line" href="https://github.com/AzalHoseinian" target="_blank" rel="noopener">
@@ -974,28 +960,17 @@ footer {
         </a>
       </div>
 
-      <dl class="hero-meta" data-rise>
-        <div>
-          <dt class="mono" data-i18n="meta.role">Role</dt>
-          <dd data-i18n="meta.roleV">Software Engineer</dd>
-        </div>
-        <div>
-          <dt class="mono" data-i18n="meta.now">Current focus</dt>
-          <dd data-i18n="meta.nowV">AI in Healthcare</dd>
-        </div>
-        <div>
-          <dt class="mono" data-i18n="meta.focus">Going deeper on</dt>
-          <dd data-i18n="meta.focusV">Digital Twins for Personalized Healthcare</dd>
-        </div>
-        <div>
-          <dt class="mono" data-i18n="meta.based">Based in</dt>
-          <dd data-i18n="meta.basedV">Iran</dd>
-        </div>
-      </dl>
+      <p class="trail" data-rise>
+        <span data-i18n="trail.a">Software Engineering</span>
+        <i aria-hidden="true">→</i>
+        <span data-i18n="trail.b">AI</span>
+        <i aria-hidden="true">→</i>
+        <b data-i18n="trail.c">Healthcare</b>
+      </p>
     </div>
   </section>
 
-  <!-- ═══════════════ FOCUS ═══════════════ -->
+  <!-- ═══════════════ 01 FOCUS ═══════════════ -->
   <section class="band" id="focus" aria-labelledby="focus-h">
     <div class="wrap">
       <div class="band-head" data-rise>
@@ -1003,78 +978,71 @@ footer {
         <h2 id="focus-h" data-i18n="focus.title">What I'm exploring</h2>
         <span class="rule" aria-hidden="true"></span>
       </div>
-      <p class="lede" data-rise data-i18n="focus.lede">
-        Not a skill list — these are the areas I'm reading into, building toward, and
-        testing ideas against. The marked one is where most of my attention goes.
-      </p>
-      <div class="focus-grid" id="focus-grid" data-rise></div>
+      <p class="lede" data-rise data-i18n="focus.lede">The map my work is pointed at.</p>
+
+      <div class="node-primary" data-rise>
+        <span class="node-tag">
+          <span class="beacon" aria-hidden="true"></span>
+          <span data-i18n="focus.activeLabel">Active focus</span>
+        </span>
+        <h3 data-i18n="focus.activeTitle">AI in Healthcare</h3>
+        <p data-i18n="focus.activeNote">Clinical problems, met with machine learning.</p>
+        <div class="node-deeper">
+          <span class="mono" data-i18n="focus.deeper">Going deeper on</span>
+          <em data-i18n="focus.deeperValue">Digital Twins · Personalized Healthcare</em>
+        </div>
+      </div>
+
+      <div class="connector" aria-hidden="true" data-rise><span></span></div>
+
+      <div class="map" id="focus-map" data-rise></div>
     </div>
   </section>
 
-  <!-- ═══════════════ WORK ═══════════════ -->
+  <!-- ═══════════════ 02 WORK ═══════════════ -->
   <section class="band" id="work" aria-labelledby="work-h">
     <div class="wrap">
       <div class="band-head" data-rise>
         <span class="idx">02</span>
-        <h2 id="work-h" data-i18n="work.title">Selected work</h2>
+        <h2 id="work-h" data-i18n="work.title">Work</h2>
         <span class="rule" aria-hidden="true"></span>
       </div>
-      <p class="lede" data-rise data-i18n="work.lede">
-        Published repositories. The AI-healthcare track is just beginning — what's here
-        today is the software engineering it's being built on.
-      </p>
-      <div class="filters" id="work-filters" role="group" data-i18n-aria-label="a11y.filter" aria-label="Filter projects" data-rise></div>
-      <div class="cards" id="work-cards" data-rise></div>
+      <p class="lede" data-rise data-i18n="work.lede">Everything published, current focus first.</p>
+      <div id="work-groups" data-rise></div>
     </div>
   </section>
 
-  <!-- ═══════════════ EXPERIMENTS ═══════════════ -->
-  <section class="band" id="experiments" aria-labelledby="exp-h">
+  <!-- ═══════════════ 03 RESEARCH ═══════════════ -->
+  <section class="band" id="research" aria-labelledby="res-h">
     <div class="wrap">
       <div class="band-head" data-rise>
         <span class="idx">03</span>
-        <h2 id="exp-h" data-i18n="exp.title">Research &amp; experiments</h2>
+        <h2 id="res-h" data-i18n="res.title">Research &amp; experiments</h2>
         <span class="rule" aria-hidden="true"></span>
       </div>
-      <p class="lede" data-rise data-i18n="exp.lede">
-        A dated log of things I try — small studies, prototypes, and dead ends. Kept
-        separate from finished work on purpose: experiments are allowed to fail.
-      </p>
-      <div class="log" id="exp-log" data-rise></div>
+      <p class="lede" data-rise data-i18n="res.lede">A dated log — studies, prototypes, and the ones that fail.</p>
+      <div class="log" id="res-log" data-rise></div>
     </div>
   </section>
 
-  <!-- ═══════════════ DIRECTION ═══════════════ -->
-  <section class="band" id="direction" aria-labelledby="dir-h">
+  <!-- ═══════════════ 04 PROCESS ═══════════════ -->
+  <section class="band" id="process" aria-labelledby="proc-h">
     <div class="wrap">
       <div class="band-head" data-rise>
         <span class="idx">04</span>
-        <h2 id="dir-h" data-i18n="dir.title">How I work</h2>
+        <h2 id="proc-h" data-i18n="proc.title">How I work</h2>
         <span class="rule" aria-hidden="true"></span>
       </div>
-      <div class="split">
-        <div class="prose" data-rise>
-          <p data-i18n="dir.p1">
-            My background is software engineering — backends, interfaces, developer tooling.
-            That's the ground I build on. What I build on it now is
-            <strong>AI for healthcare</strong>.
-          </p>
-          <p data-i18n="dir.p2">
-            The method is deliberately simple and repeatable: choose a real problem, build
-            something against it, publish the code, and document the result — including the
-            attempts that don't work. Then do it again.
-          </p>
-          <p data-i18n="dir.p3">
-            Every loop leaves a trace on GitHub. That trace, not a job title, is the
-            portfolio I'm building.
-          </p>
-        </div>
-        <div class="steps" id="dir-steps" data-rise></div>
-      </div>
+      <p class="lede" data-rise data-i18n="proc.lede">One loop, run again and again. Every turn leaves code behind.</p>
+      <div class="flow" id="flow" data-rise></div>
+      <p class="loop-note" data-rise>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16M3 21v-5h5"/></svg>
+        <span data-i18n="proc.loop">The trace on GitHub is the portfolio</span>
+      </p>
     </div>
   </section>
 
-  <!-- ═══════════════ NOW ═══════════════ -->
+  <!-- ═══════════════ 05 NOW ═══════════════ -->
   <section class="band" id="now" aria-labelledby="now-h">
     <div class="wrap">
       <div class="band-head" data-rise>
@@ -1082,20 +1050,13 @@ footer {
         <h2 id="now-h" data-i18n="now.title">Now</h2>
         <span class="rule" aria-hidden="true"></span>
       </div>
+
       <div class="now-headline" data-rise>
         <span class="mono" data-i18n="now.focusLabel">Currently focused on</span>
         <p data-i18n="now.focusValue">AI in Healthcare</p>
       </div>
 
-      <p class="lede" data-rise data-i18n="now.lede">
-        The areas that focus breaks down into, and what I'm actively working through.
-      </p>
       <div class="now-grid" id="now-grid" data-rise></div>
-
-      <div class="now-also" data-rise>
-        <span class="mono" data-i18n="now.alsoLabel">Alongside</span>
-        <p id="now-also"></p>
-      </div>
 
       <p class="mono stamp" data-rise>
         <span data-i18n="now.updated">Last updated</span> · <span id="now-stamp">August 2026</span>
@@ -1103,7 +1064,7 @@ footer {
     </div>
   </section>
 
-  <!-- ═══════════════ ABOUT ═══════════════ -->
+  <!-- ═══════════════ 06 ABOUT ═══════════════ -->
   <section class="band" id="about" aria-labelledby="about-h">
     <div class="wrap">
       <div class="band-head" data-rise>
@@ -1114,19 +1075,14 @@ footer {
       <div class="about-wrap">
         <img class="avatar" data-rise
              src="https://avatars.githubusercontent.com/u/51117788?v=4"
-             alt="Azal Hosseinian" width="84" height="84" loading="lazy">
+             alt="Azal Hosseinian" width="76" height="76" loading="lazy">
         <div class="prose" data-rise>
           <p data-i18n="about.p1">
-            I studied <strong>Computer Science</strong> and work as a software developer.
-            Most of what I enjoy sits in the same place: building systems that are
-            intelligent enough to be useful and simple enough to be trusted.
+            Bachelor's degree in <strong>Computer Software Engineering</strong>, working as a
+            software developer. My focus now is <strong>AI in healthcare</strong>.
           </p>
           <p data-i18n="about.p2">
-            Over time I want that work to point at healthcare — where the problems are
-            genuinely hard and getting them right matters more than shipping fast.
-          </p>
-          <p data-i18n="about.p3">
-            I'd rather show the path than describe it. Everything real lives on GitHub.
+            I learn a field by building in it. Everything real is on GitHub.
           </p>
         </div>
       </div>
@@ -1141,19 +1097,16 @@ footer {
         <span class="sepdot" aria-hidden="true"></span>
         <span data-i18n="motto.b">GitHub — the evidence</span>
       </span>
-      <h2 id="closing-h" data-rise data-i18n="closing.title">The code is the real record.</h2>
+      <h2 id="closing-h" data-rise data-i18n="closing.title">The code is the record.</h2>
       <p data-rise data-i18n="closing.body">
-        Projects, experiments, and everything in progress are published as I go.
         If any of this overlaps with what you're building, I'd like to hear about it.
       </p>
       <div class="cta-row" data-rise>
         <a class="btn btn-solid" href="https://github.com/AzalHoseinian" target="_blank" rel="noopener">
           <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.8-1.6-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.4 11.4 0 0 1 6 0C17.7 5 18.7 5.3 18.7 5.3c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg>
-          <span data-i18n="closing.cta">View GitHub profile</span>
+          <span data-i18n="closing.cta">GitHub profile</span>
         </a>
-        <a class="btn btn-line" href="mailto:azam.hosseynian@yahoo.com">
-          <span data-i18n="closing.cta2">Email me</span>
-        </a>
+        <a class="btn btn-line" href="mailto:azam.hosseynian@yahoo.com" data-i18n="closing.cta2">Email</a>
       </div>
     </div>
   </section>
@@ -1162,11 +1115,11 @@ footer {
 
 <footer>
   <div class="wrap foot">
-    <span>© <span id="year">2026</span> Azal Hosseinian</span>
+    <span>© <span id="year">2026</span> Azal Hosseinian · <span data-i18n="foot.loc">Iran</span></span>
     <nav class="foot-links" data-i18n-aria-label="a11y.footer" aria-label="Elsewhere">
       <a href="https://github.com/AzalHoseinian" target="_blank" rel="noopener">GitHub</a>
       <a href="mailto:azam.hosseynian@yahoo.com" data-i18n="foot.email">Email</a>
-      <a href="#top" data-i18n="foot.top">Back to top</a>
+      <a href="#top" data-i18n="foot.top">Top</a>
     </nav>
   </div>
 </footer>
@@ -1175,55 +1128,46 @@ footer {
 "use strict";
 
 /* ══════════════════════════════════════════════════════════════════════════
-   ①  CONTENT — everything editable lives here.
-       To add a project or experiment, append one object. No HTML changes.
+   ①  CONTENT — the only place to edit when the site grows.
+       Add a project or an experiment by appending one object. No HTML edits.
    ══════════════════════════════════════════════════════════════════════════ */
+
+/* Category labels used by project cards. */
+const CATEGORY = {
+  health:   { en: "AI × Healthcare",      fa: "هوش مصنوعی × سلامت" },
+  software: { en: "Software Engineering", fa: "مهندسی نرم‌افزار" },
+};
 
 const CONTENT = {
 
-  /* ---- Areas of exploration. `primary: true` gets the accent dot. ---- */
+  /* ---- Satellites around the active focus. Short notes only. ---- */
   focus: [
-    { title: { en: "AI in Healthcare",        fa: "هوش مصنوعی در سلامت" },
-      note:  { en: "Where clinical problems and machine learning actually meet.",
-               fa: "جایی که مسائل بالینی و یادگیری ماشین واقعاً به هم می‌رسند." } },
-
     { title: { en: "Digital Twins",           fa: "دوقلوهای دیجیتال" },
-      primary: true,
-      note:  { en: "Modelling a person closely enough to reason about their care.",
-               fa: "مدل‌کردن یک فرد آن‌قدر دقیق که بتوان دربارهٔ درمانش استدلال کرد." } },
-
+      note:  { en: "A living model of one patient.",      fa: "مدلی زنده از یک بیمار." } },
     { title: { en: "Personalized Healthcare", fa: "سلامت شخصی‌سازی‌شده" },
-      note:  { en: "Care shaped by the individual rather than the average patient.",
-               fa: "درمانی که بر اساس خودِ فرد شکل بگیرد، نه بیمار متوسط." } },
-
-    { title: { en: "Human-centered AI",       fa: "هوش مصنوعی انسان‌محور" },
-      note:  { en: "Systems people can question, correct, and still rely on.",
-               fa: "سیستم‌هایی که بتوان به آن‌ها اعتراض کرد، اصلاحشان کرد و باز به آن‌ها تکیه کرد." } },
-
+      note:  { en: "Care fitted to the individual.",      fa: "درمانی متناسب با خودِ فرد." } },
     { title: { en: "Healthcare Data",         fa: "دادهٔ سلامت" },
-      note:  { en: "Messy, sensitive, fragmented — usually the hardest part.",
-               fa: "آشفته، حساس و پراکنده — معمولاً سخت‌ترین بخش کار." } },
-
-    { title: { en: "LLMs",                    fa: "مدل‌های زبانی بزرگ" },
-      note:  { en: "Language as an interface to knowledge and clinical workflow.",
-               fa: "زبان به‌عنوان رابطی برای دانش و جریان کاری بالینی." } },
-
+      note:  { en: "Messy, sensitive, fragmented.",       fa: "آشفته، حساس و پراکنده." } },
     { title: { en: "Intelligent Systems",     fa: "سیستم‌های هوشمند" },
-      note:  { en: "Software that observes, decides, and adapts over time.",
-               fa: "نرم‌افزاری که مشاهده می‌کند، تصمیم می‌گیرد و به‌مرور سازگار می‌شود." } },
+      note:  { en: "Software that observes and adapts.",  fa: "نرم‌افزاری که می‌بیند و سازگار می‌شود." } },
+    { title: { en: "Human-centered AI",       fa: "هوش مصنوعی انسان‌محور" },
+      note:  { en: "Systems people can question.",        fa: "سیستم‌هایی که می‌توان به آن‌ها اعتراض کرد." } },
   ],
 
-  /* ---- Projects.  category: "healthcare" | "software"
-          desc: null  →  the card renders without a description.
-          status: null →  no status chip.  Use "wip" / "active" / "archived" later. ---- */
+  /* ---- Projects.
+          category : "health" | "software"
+          featured : true  → appears under Selected work, above everything else
+          desc     : null  → card renders with no description
+          status   : null  → no status chip  (or "active" / "wip" / "archived") ---- */
   projects: [
     {
       title: "devinsight-mcp",
       url: "https://github.com/AzalHoseinian/devinsight-mcp",
-      desc: { en: "A Python MCP server that lets Claude inspect and analyze Git repositories.",
-              fa: "یک سرور MCP با پایتون که به Claude امکان بررسی و تحلیل ریپازیتوری‌های گیت را می‌دهد." },
-      tags: ["Python", "MCP", "LLM tooling"],
+      desc: { en: "MCP server that lets Claude inspect and analyze Git repositories.",
+              fa: "سرور MCP که به Claude امکان بررسی و تحلیل ریپازیتوری‌های گیت را می‌دهد." },
+      tags: ["Python", "MCP"],
       category: "software",
+      featured: false,
       year: 2026,
       status: null
     },
@@ -1233,6 +1177,7 @@ const CONTENT = {
       desc: null,
       tags: ["TypeScript"],
       category: "software",
+      featured: false,
       year: 2024,
       status: null
     },
@@ -1242,53 +1187,36 @@ const CONTENT = {
       desc: null,
       tags: ["JavaScript"],
       category: "software",
+      featured: false,
       year: 2024,
       status: null
     },
   ],
 
-  /* ---- Experiments. Empty on purpose — nothing invented.
-          Add entries like:
-          { date: "2026-09", title: {en:"…", fa:"…"},
-            note: {en:"…", fa:"…"}, state: "in progress", url: null }        ---- */
+  /* ---- Experiments. Empty by design — nothing invented.
+          Append:
+          { date: "2026-09", title: {en,fa}, note: {en,fa},
+            state: "in progress", url: "https://github.com/..." }             ---- */
   experiments: [],
+  logYear: "2026",
 
-  /* ---- The working loop: Build → Document → Publish → Learn → Repeat ---- */
-  directions: [
-    { title: { en: "Choose a problem",  fa: "انتخاب یک مسئله" },
-      note:  { en: "A real question in healthcare worth spending weeks on.",
-               fa: "یک پرسش واقعی در حوزهٔ سلامت که ارزش هفته‌ها کارکردن داشته باشد." } },
-    { title: { en: "Build",             fa: "ساختن" },
-      note:  { en: "A working prototype, not a slide about one.",
-               fa: "یک نمونهٔ کارآمد، نه یک اسلاید دربارهٔ آن." } },
-    { title: { en: "Publish",           fa: "انتشار" },
-      note:  { en: "The code goes public on GitHub, finished or not.",
-               fa: "کد روی گیت‌هاب منتشر می‌شود، تمام‌شده یا نیمه‌کاره." } },
-    { title: { en: "Document",          fa: "مستندسازی" },
-      note:  { en: "What was tried, what held up, what failed.",
-               fa: "چه امتحان شد، چه جواب داد و چه شکست خورد." } },
-    { title: { en: "Repeat",            fa: "تکرار" },
-      note:  { en: "Each loop adds to the trace and narrows the next question.",
-               fa: "هر چرخه به این مسیر اضافه می‌کند و پرسش بعدی را دقیق‌تر." } },
+  /* ---- The working loop, rendered as the flow diagram. ---- */
+  flow: [
+    { label: { en: "Problem",    fa: "مسئله" },     note: { en: "Pick something real",      fa: "انتخاب یک مسئلهٔ واقعی" } },
+    { label: { en: "Build",      fa: "ساخت" },      note: { en: "Make it work",             fa: "به‌کارانداختنش" } },
+    { label: { en: "Experiment", fa: "آزمایش" },    note: { en: "Test the idea",            fa: "سنجیدن ایده" } },
+    { label: { en: "Publish",    fa: "انتشار" },    note: { en: "Ship the code",            fa: "انتشار کد" } },
+    { label: { en: "Document",   fa: "مستندسازی" }, note: { en: "Write what happened",      fa: "نوشتن آنچه رخ داد" } },
+    { label: { en: "Repeat",     fa: "تکرار" },     note: { en: "Narrow the next question", fa: "دقیق‌ترکردن پرسش بعدی" } },
   ],
 
-  /* ---- Now.  `nowAreas` is the headline focus broken down;
-          `nowAlso` is supporting work, kept visually secondary. ---- */
+  /* ---- Now: only what belongs to the current focus. ---- */
   nowStamp: { en: "August 2026", fa: "شهریور ۱۴۰۵" },
   now: [
-    { en: "Healthcare AI",             fa: "هوش مصنوعی در سلامت" },
-    { en: "Digital Twins",             fa: "دوقلوهای دیجیتال" },
-    { en: "Personalized Healthcare",   fa: "سلامت شخصی‌سازی‌شده" },
-    { en: "Intelligent Systems",       fa: "سیستم‌های هوشمند" },
-    { en: "Healthcare Data",           fa: "دادهٔ سلامت" },
-    { en: "LLMs",                      fa: "مدل‌های زبانی بزرگ" },
-  ],
-  nowAlso: [
-    { en: "Software engineering",      fa: "مهندسی نرم‌افزار" },
-    { en: "AI-assisted development",   fa: "توسعه با کمک هوش مصنوعی" },
-    { en: "Backend & SQL",             fa: "بک‌اند و SQL" },
-    { en: "Voice agents",              fa: "ایجنت‌های صوتی" },
-    { en: "English communication",     fa: "ارتباط به زبان انگلیسی" },
+    { en: "Digital Twins",           fa: "دوقلوهای دیجیتال" },
+    { en: "Personalized Healthcare", fa: "سلامت شخصی‌سازی‌شده" },
+    { en: "Healthcare AI",           fa: "هوش مصنوعی در سلامت" },
+    { en: "Intelligent Systems",     fa: "سیستم‌های هوشمند" },
   ],
 };
 
@@ -1299,125 +1227,121 @@ const CONTENT = {
 const UI = {
   en: {
     "skip": "Skip to content",
-    "nav.focus": "Focus", "nav.work": "Work", "nav.experiments": "Experiments",
-    "nav.direction": "Process", "nav.now": "Now", "nav.about": "About",
+    "nav.focus": "Focus", "nav.work": "Work", "nav.research": "Research",
+    "nav.now": "Now", "nav.about": "About",
 
     "hero.status": "Currently focused on AI in Healthcare",
     "hero.kicker": "Software Engineer · AI in Healthcare",
     "hero.tagline": "Building and exploring intelligent systems for healthcare.",
-    "hero.stance": "Software engineer, Computer Software Engineering graduate, now working at the intersection of AI and healthcare — digital twins, personalized care, and intelligent systems. I pick a problem, build it, publish the code, and write down what I learned. This site is the map. GitHub is the evidence.",
-    "hero.cta1": "Explore my work",
-
-    "meta.role": "Role",             "meta.roleV": "Software Engineer",
-    "meta.now": "Current focus",     "meta.nowV": "AI in Healthcare",
-    "meta.focus": "Going deeper on", "meta.focusV": "Digital Twins for Personalized Healthcare",
-    "meta.based": "Based in",        "meta.basedV": "Iran",
+    "hero.cta1": "Explore work",
+    "trail.a": "Software Engineering", "trail.b": "AI", "trail.c": "Healthcare",
 
     "focus.title": "What I'm exploring",
-    "focus.lede": "The areas my current focus breaks into — what I'm reading into, building against, and testing ideas on. Not credentials. The marked one takes most of my attention.",
+    "focus.lede": "The map my work is pointed at.",
+    "focus.activeLabel": "Active focus",
+    "focus.activeTitle": "AI in Healthcare",
+    "focus.activeNote": "Clinical problems, met with machine learning.",
+    "focus.deeper": "Going deeper on",
+    "focus.deeperValue": "Digital Twins · Personalized Healthcare",
 
-    "work.title": "Selected work",
-    "work.lede": "Published repositories. The AI-healthcare track is just beginning — what's here today is the software engineering it's being built on.",
-    "work.all": "All", "work.healthcare": "AI & Healthcare", "work.software": "Software",
-    "work.empty": "Nothing published under this track yet. The first AI-healthcare projects are in progress — they'll appear here as they go public.",
+    "work.title": "Work",
+    "work.lede": "Everything published, current focus first.",
+    "work.selected": "Selected work",
+    "work.other": "Other work",
+    "work.awaitingLabel": "First up",
+    "work.awaiting": "The first AI × Healthcare projects land here. They're being built now — the code appears on GitHub as it goes.",
 
-    "exp.title": "Research & experiments",
-    "exp.lede": "A dated log of things I try — small studies, prototypes, and dead ends. Kept separate from finished work on purpose: experiments are allowed to fail.",
-    "exp.empty": "The log starts empty. As experiments are run and written up, they'll be listed here with dates and links to the code.",
+    "res.title": "Research & experiments",
+    "res.lede": "A dated log — studies, prototypes, and the ones that fail.",
+    "res.awaitingLabel": "Starting point",
+    "res.awaiting": "No published experiments yet. The lab is just getting started — each one will be logged here with its date and its code.",
 
-    "dir.title": "How I work",
-    "dir.p1": "My background is software engineering — backends, interfaces, developer tooling. That's the ground I build on. What I build on it now is <strong>AI for healthcare</strong>.",
-    "dir.p2": "The method is deliberately simple and repeatable: choose a real problem, build something against it, publish the code, and document the result — including the attempts that don't work. Then do it again.",
-    "dir.p3": "Every loop leaves a trace on GitHub. That trace, not a job title, is the portfolio I'm building.",
+    "proc.title": "How I work",
+    "proc.lede": "One loop, run again and again. Every turn leaves code behind.",
+    "proc.loop": "The trace on GitHub is the portfolio",
 
     "now.title": "Now",
     "now.focusLabel": "Currently focused on",
     "now.focusValue": "AI in Healthcare",
-    "now.lede": "The areas that focus breaks down into, and what I'm actively working through.",
-    "now.alsoLabel": "Alongside",
     "now.updated": "Last updated",
 
     "about.title": "About",
-    "about.p1": "I hold a bachelor's degree in <strong>Computer Software Engineering</strong> and work as a software developer. What I enjoy sits in one place: building systems intelligent enough to be useful and simple enough to be trusted.",
-    "about.p2": "My focus now is <strong>AI in healthcare</strong> — intelligent systems, personalized care, and digital twins in particular. I'm learning this domain by building in it, not by claiming it.",
-    "about.p3": "So there's no long biography here. Each project and experiment I publish is the actual record — all of it on GitHub.",
+    "about.p1": "Bachelor's degree in <strong>Computer Software Engineering</strong>, working as a software developer. My focus now is <strong>AI in healthcare</strong>.",
+    "about.p2": "I learn a field by building in it. Everything real is on GitHub.",
 
     "motto.a": "Website — the map",
     "motto.b": "GitHub — the evidence",
-    "closing.title": "The code is the real record.",
-    "closing.body": "Projects, experiments, and everything in progress are published as I go. If any of this overlaps with what you're building, I'd like to hear about it.",
-    "closing.cta": "View GitHub profile",
-    "closing.cta2": "Email me",
+    "closing.title": "The code is the record.",
+    "closing.body": "If any of this overlaps with what you're building, I'd like to hear about it.",
+    "closing.cta": "GitHub profile",
+    "closing.cta2": "Email",
 
-    "foot.email": "Email", "foot.top": "Back to top",
+    "foot.email": "Email", "foot.top": "Top", "foot.loc": "Iran",
 
     "a11y.lang": "Language", "a11y.theme": "Toggle theme",
-    "a11y.filter": "Filter projects", "a11y.footer": "Elsewhere",
-    "a11y.open": "Opens on GitHub",
+    "a11y.footer": "Elsewhere", "a11y.open": "Opens on GitHub",
   },
 
   fa: {
     "skip": "پرش به محتوا",
-    "nav.focus": "تمرکز", "nav.work": "کارها", "nav.experiments": "آزمایش‌ها",
-    "nav.direction": "روش کار", "nav.now": "اکنون", "nav.about": "درباره",
+    "nav.focus": "تمرکز", "nav.work": "کارها", "nav.research": "پژوهش",
+    "nav.now": "اکنون", "nav.about": "درباره",
 
     "hero.status": "تمرکز فعلی: هوش مصنوعی در سلامت",
     "hero.kicker": "مهندس نرم‌افزار · هوش مصنوعی در سلامت",
     "hero.tagline": "ساختن و کاوش سیستم‌های هوشمند برای حوزهٔ سلامت.",
-    "hero.stance": "مهندس نرم‌افزار و دانش‌آموختهٔ مهندسی نرم‌افزار کامپیوتر؛ اکنون در تقاطع هوش مصنوعی و سلامت کار می‌کنم — دوقلوهای دیجیتال، سلامت شخصی‌سازی‌شده و سیستم‌های هوشمند. یک مسئله را انتخاب می‌کنم، می‌سازمش، کد را منتشر می‌کنم و آنچه یاد گرفته‌ام را می‌نویسم. این سایت نقشهٔ راه است؛ گیت‌هاب سند آن.",
-    "hero.cta1": "کارهایم را ببینید",
-
-    "meta.role": "نقش",              "meta.roleV": "مهندس نرم‌افزار",
-    "meta.now": "تمرکز فعلی",        "meta.nowV": "هوش مصنوعی در سلامت",
-    "meta.focus": "تمرکز عمیق‌تر بر", "meta.focusV": "دوقلوهای دیجیتال برای سلامت شخصی‌سازی‌شده",
-    "meta.based": "محل",             "meta.basedV": "ایران",
+    "hero.cta1": "دیدن کارها",
+    "trail.a": "مهندسی نرم‌افزار", "trail.b": "هوش مصنوعی", "trail.c": "سلامت",
 
     "focus.title": "چه چیزهایی را دنبال می‌کنم",
-    "focus.lede": "حوزه‌هایی که تمرکز فعلی‌ام به آن‌ها تقسیم می‌شود — چیزهایی که دربارهٔ آن‌ها می‌خوانم، رویشان می‌سازم و ایده‌هایم را با آن‌ها می‌سنجم. این‌ها مدرک و عنوان نیستند. مورد نشان‌دار بیشترین تمرکزم را می‌گیرد.",
+    "focus.lede": "نقشه‌ای که کارم به سمت آن نشانه رفته است.",
+    "focus.activeLabel": "تمرکز فعال",
+    "focus.activeTitle": "هوش مصنوعی در سلامت",
+    "focus.activeNote": "مسائل بالینی، در تلاقی با یادگیری ماشین.",
+    "focus.deeper": "تمرکز عمیق‌تر بر",
+    "focus.deeperValue": "دوقلوهای دیجیتال · سلامت شخصی‌سازی‌شده",
 
-    "work.title": "کارهای منتخب",
-    "work.lede": "ریپازیتوری‌های منتشرشده. مسیر هوش مصنوعی و سلامت تازه آغاز شده — آنچه امروز اینجاست، همان مهندسی نرم‌افزاری است که این مسیر روی آن ساخته می‌شود.",
-    "work.all": "همه", "work.healthcare": "هوش مصنوعی و سلامت", "work.software": "نرم‌افزار",
-    "work.empty": "هنوز چیزی در این مسیر منتشر نشده است. اولین پروژه‌های هوش مصنوعی و سلامت در دست کارند و به‌محض انتشار اینجا می‌آیند.",
+    "work.title": "کارها",
+    "work.lede": "هرچه منتشر شده؛ تمرکز فعلی بالاتر.",
+    "work.selected": "کارهای منتخب",
+    "work.other": "کارهای دیگر",
+    "work.awaitingLabel": "در راه",
+    "work.awaiting": "اولین پروژه‌های هوش مصنوعی × سلامت اینجا می‌نشینند. همین حالا در دست ساخت‌اند و کدشان هم‌زمان روی گیت‌هاب منتشر می‌شود.",
 
-    "exp.title": "پژوهش و آزمایش‌ها",
-    "exp.lede": "یک دفترچهٔ تاریخ‌دار از چیزهایی که امتحان می‌کنم — مطالعه‌های کوچک، نمونه‌های اولیه و بن‌بست‌ها. عمداً از کارهای تمام‌شده جدا نگه داشته می‌شود: آزمایش حق دارد شکست بخورد.",
-    "exp.empty": "این دفترچه خالی آغاز می‌شود. هر آزمایشی که انجام و مکتوب شود، با تاریخ و پیوند کد اینجا فهرست خواهد شد.",
+    "res.title": "پژوهش و آزمایش‌ها",
+    "res.lede": "یک دفترچهٔ تاریخ‌دار — مطالعه‌ها، نمونه‌های اولیه و آن‌هایی که شکست می‌خورند.",
+    "res.awaitingLabel": "نقطهٔ شروع",
+    "res.awaiting": "هنوز آزمایشی منتشر نشده است. آزمایشگاه تازه راه افتاده — هر آزمایش با تاریخ و کدش اینجا ثبت خواهد شد.",
 
-    "dir.title": "روش کار من",
-    "dir.p1": "پیشینهٔ من مهندسی نرم‌افزار است — بک‌اند، رابط کاربری و ابزار توسعه‌دهنده. این زمینی است که روی آن می‌سازم و چیزی که اکنون رویش می‌سازم <strong>هوش مصنوعی برای سلامت</strong> است.",
-    "dir.p2": "روش عمداً ساده و تکرارشدنی است: یک مسئلهٔ واقعی را انتخاب می‌کنم، چیزی برایش می‌سازم، کد را منتشر می‌کنم و نتیجه را مستند می‌کنم — از جمله تلاش‌هایی که جواب نداده‌اند. بعد دوباره از نو.",
-    "dir.p3": "هر چرخه ردی روی گیت‌هاب باقی می‌گذارد. همین رد — و نه یک عنوان شغلی — همان نمونه‌کاری است که می‌سازم.",
+    "proc.title": "روش کار من",
+    "proc.lede": "یک چرخه، بارها و بارها. هر دور، کدی از خود به جا می‌گذارد.",
+    "proc.loop": "همان ردِ روی گیت‌هاب، نمونه‌کار است",
 
     "now.title": "اکنون",
     "now.focusLabel": "تمرکز فعلی روی",
     "now.focusValue": "هوش مصنوعی در سلامت",
-    "now.lede": "حوزه‌هایی که این تمرکز به آن‌ها تقسیم می‌شود و چیزهایی که فعالانه رویشان کار می‌کنم.",
-    "now.alsoLabel": "در کنار آن",
     "now.updated": "آخرین به‌روزرسانی",
 
     "about.title": "درباره",
-    "about.p1": "کارشناسی <strong>مهندسی نرم‌افزار کامپیوتر</strong> دارم و به‌عنوان توسعه‌دهندهٔ نرم‌افزار کار می‌کنم. آنچه از آن لذت می‌برم یک جا جمع است: ساختن سیستم‌هایی که به‌قدر کافی هوشمند باشند تا مفید باشند و به‌قدر کافی ساده باشند تا بتوان به آن‌ها اعتماد کرد.",
-    "about.p2": "تمرکز فعلی‌ام <strong>هوش مصنوعی در سلامت</strong> است — به‌طور خاص سیستم‌های هوشمند، سلامت شخصی‌سازی‌شده و دوقلوهای دیجیتال. این حوزه را با ساختن در آن یاد می‌گیرم، نه با ادعا کردنش.",
-    "about.p3": "برای همین اینجا زندگی‌نامهٔ بلندی نیست. هر پروژه و آزمایشی که منتشر می‌کنم، سند واقعی است — همه روی گیت‌هاب.",
+    "about.p1": "کارشناسی <strong>مهندسی نرم‌افزار کامپیوتر</strong>؛ به‌عنوان توسعه‌دهندهٔ نرم‌افزار کار می‌کنم. تمرکز فعلی‌ام <strong>هوش مصنوعی در سلامت</strong> است.",
+    "about.p2": "یک حوزه را با ساختن در آن یاد می‌گیرم. هرچه واقعی است، روی گیت‌هاب است.",
 
     "motto.a": "سایت — نقشه",
     "motto.b": "گیت‌هاب — سند",
     "closing.title": "کد، سند واقعی است.",
-    "closing.body": "پروژه‌ها، آزمایش‌ها و هرچه در جریان است، هم‌زمان با پیشرفت منتشر می‌شوند. اگر بخشی از این‌ها با کاری که می‌سازید هم‌پوشانی دارد، خوشحال می‌شوم بشنوم.",
-    "closing.cta": "دیدن پروفایل گیت‌هاب",
-    "closing.cta2": "ارسال ایمیل",
+    "closing.body": "اگر بخشی از این‌ها با کاری که می‌سازید هم‌پوشانی دارد، خوشحال می‌شوم بشنوم.",
+    "closing.cta": "پروفایل گیت‌هاب",
+    "closing.cta2": "ایمیل",
 
-    "foot.email": "ایمیل", "foot.top": "بازگشت به بالا",
+    "foot.email": "ایمیل", "foot.top": "بالا", "foot.loc": "ایران",
 
     "a11y.lang": "زبان", "a11y.theme": "تغییر تم",
-    "a11y.filter": "فیلتر پروژه‌ها", "a11y.footer": "جاهای دیگر",
-    "a11y.open": "در گیت‌هاب باز می‌شود",
+    "a11y.footer": "جاهای دیگر", "a11y.open": "در گیت‌هاب باز می‌شود",
   },
 };
 
 /* ══════════════════════════════════════════════════════════════════════════
-   ③  STATE
+   ③  STATE + HELPERS
    ══════════════════════════════════════════════════════════════════════════ */
 
 const store = {
@@ -1426,9 +1350,8 @@ const store = {
 };
 
 const state = {
-  lang:   store.get("lang", (navigator.language || "").startsWith("fa") ? "fa" : "en"),
-  theme:  store.get("theme", "dark"),
-  filter: "all",
+  lang:  store.get("lang", (navigator.language || "").startsWith("fa") ? "fa" : "en"),
+  theme: store.get("theme", "dark"),
 };
 
 const $  = (sel, root) => (root || document).querySelector(sel);
@@ -1449,130 +1372,122 @@ const esc = (s) => String(s).replace(/[&<>"']/g, (c) =>
 
 const ARROW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M8 7h9v9"/></svg>';
 
+function awaitingPanel(labelKey, bodyKey) {
+  return el("div", "awaiting",
+    '<span class="mono">' + esc(t(labelKey)) + '</span>' +
+    '<p>' + esc(t(bodyKey)) + '</p>');
+}
+
 /* ══════════════════════════════════════════════════════════════════════════
    ④  RENDERERS
    ══════════════════════════════════════════════════════════════════════════ */
 
 function renderFocus() {
-  const host = $("#focus-grid");
+  const host = $("#focus-map");
   host.innerHTML = "";
   CONTENT.focus.forEach((f, i) => {
-    const cell = el("article", "focus-cell");
-    const dot  = f.primary ? '<span class="star" aria-hidden="true"></span>' : "";
-    cell.innerHTML =
+    host.appendChild(el("article", "node",
       '<span class="tick" aria-hidden="true">' + String(i + 1).padStart(2, "0") + '</span>' +
-      '<h3>' + dot + esc(val(f.title)) + '</h3>' +
-      '<p>' + esc(val(f.note)) + '</p>';
-    host.appendChild(cell);
+      '<h3>' + esc(val(f.title)) + '</h3>' +
+      '<p>' + esc(val(f.note)) + '</p>'));
   });
 }
 
-function renderFilters() {
-  const host = $("#work-filters");
-  const keys = [
-    { id: "all",        label: t("work.all") },
-    { id: "healthcare", label: t("work.healthcare") },
-    { id: "software",   label: t("work.software") },
-  ];
-  host.innerHTML = "";
-  keys.forEach((k) => {
-    const n = CONTENT.projects.filter((p) => k.id === "all" || p.category === k.id).length;
-    const b = el("button", null,
-      esc(k.label) + '<span class="count">' + n + '</span>');
-    b.type = "button";
-    b.setAttribute("aria-pressed", String(state.filter === k.id));
-    b.addEventListener("click", () => {
-      state.filter = k.id;
-      renderFilters();
-      renderProjects();
-    });
-    host.appendChild(b);
-  });
+function projectCard(p) {
+  const a = el("a", "card" + (p.featured ? " is-featured" : ""));
+  a.href = p.url;
+  a.target = "_blank";
+  a.rel = "noopener";
+
+  const desc = val(p.desc);
+  const cat  = val(CATEGORY[p.category]);
+
+  a.innerHTML =
+    '<div class="card-top">' +
+      '<h4>' + esc(p.title) + '</h4>' +
+      '<span class="go" aria-hidden="true">' + ARROW + '</span>' +
+    '</div>' +
+    (desc ? '<p>' + esc(desc) + '</p>' : "") +
+    '<div class="meta-row">' +
+      (cat ? '<span class="chip chip-cat">' + esc(cat) + '</span>' : "") +
+      (p.year ? '<span class="chip chip-year">' + esc(p.year) + '</span>' : "") +
+      (p.status ? '<span class="chip chip-status">' + esc(p.status) + '</span>' : "") +
+      p.tags.map((tag) => '<span class="chip">' + esc(tag) + '</span>').join("") +
+    '</div>' +
+    '<span class="sr">' + esc(t("a11y.open")) + '</span>';
+
+  return a;
 }
 
-function renderProjects() {
-  const host = $("#work-cards");
+function groupHead(label, count) {
+  return el("div", "group-head",
+    '<h3>' + esc(label) + '</h3>' +
+    '<span class="rule" aria-hidden="true"></span>' +
+    '<span class="n">' + String(count).padStart(2, "0") + '</span>');
+}
+
+function renderWork() {
+  const host = $("#work-groups");
   host.innerHTML = "";
 
-  const list = CONTENT.projects.filter(
-    (p) => state.filter === "all" || p.category === state.filter);
+  const featured = CONTENT.projects.filter((p) => p.featured);
+  const rest     = CONTENT.projects.filter((p) => !p.featured);
 
-  if (!list.length) {
-    host.appendChild(emptyPanel(t("work.empty")));
-    return;
+  // Selected work — featured projects, or an honest placeholder while there are none
+  const sel = el("section", "group");
+  sel.appendChild(groupHead(t("work.selected"), featured.length));
+  if (featured.length) {
+    const cards = el("div", "cards");
+    featured.forEach((p) => cards.appendChild(projectCard(p)));
+    sel.appendChild(cards);
+  } else {
+    sel.appendChild(awaitingPanel("work.awaitingLabel", "work.awaiting"));
   }
+  host.appendChild(sel);
 
-  list.forEach((p) => {
-    const a = el("a", "card");
-    a.href = p.url;
-    a.target = "_blank";
-    a.rel = "noopener";
-
-    const desc = val(p.desc);
-    const catLabel = p.category === "healthcare" ? t("work.healthcare") : t("work.software");
-
-    a.innerHTML =
-      '<div class="card-top">' +
-        '<h3>' + esc(p.title) + '</h3>' +
-        '<span class="go" aria-hidden="true">' + ARROW + '</span>' +
-      '</div>' +
-      (desc ? '<p>' + esc(desc) + '</p>' : "") +
-      '<div class="meta-row">' +
-        '<span class="chip chip-cat">' + esc(catLabel) + '</span>' +
-        (p.year ? '<span class="chip chip-year">' + esc(p.year) + '</span>' : "") +
-        (p.status ? '<span class="chip">' + esc(p.status) + '</span>' : "") +
-        p.tags.map((tag) => '<span class="chip">' + esc(tag) + '</span>').join("") +
-      '</div>' +
-      '<span class="sr">' + esc(t("a11y.open")) + '</span>';
-
-    host.appendChild(a);
-  });
+  // Other work
+  if (rest.length) {
+    const other = el("section", "group");
+    other.appendChild(groupHead(t("work.other"), rest.length));
+    const cards = el("div", "cards");
+    rest.forEach((p) => cards.appendChild(projectCard(p)));
+    other.appendChild(cards);
+    host.appendChild(other);
+  }
 }
 
-function renderExperiments() {
-  const host = $("#exp-log");
+function renderResearch() {
+  const host = $("#res-log");
   host.innerHTML = "";
+  host.appendChild(el("div", "log-year", esc(CONTENT.logYear)));
 
   if (!CONTENT.experiments.length) {
-    host.appendChild(emptyPanel(t("exp.empty")));
+    host.appendChild(awaitingPanel("res.awaitingLabel", "res.awaiting"));
     return;
   }
 
-  // newest first, grouped by year
-  const sorted = CONTENT.experiments.slice().sort((a, b) => (a.date < b.date ? 1 : -1));
-  let currentYear = null;
-
-  sorted.forEach((x) => {
-    const year = String(x.date).slice(0, 4);
-    if (year !== currentYear) {
-      currentYear = year;
-      host.appendChild(el("div", "log-year", esc(year)));
-    }
-
-    const row  = el("div", "log-item");
-    const body =
-      '<div class="log-date">' + esc(x.date) + '</div>' +
-      '<div class="log-body">' +
-        '<h3>' + (x.url
-            ? '<a href="' + esc(x.url) + '" target="_blank" rel="noopener">' + esc(val(x.title)) + '</a>'
-            : esc(val(x.title))) + '</h3>' +
-        (val(x.note) ? '<p>' + esc(val(x.note)) + '</p>' : "") +
-      '</div>' +
-      (x.state ? '<div class="log-state">' + esc(x.state) + '</div>' : "<div></div>");
-    row.innerHTML = body;
-    host.appendChild(row);
-  });
+  CONTENT.experiments
+    .slice()
+    .sort((a, b) => (a.date < b.date ? 1 : -1))
+    .forEach((x) => {
+      host.appendChild(el("div", "log-item",
+        '<div class="log-date">' + esc(x.date) + '</div>' +
+        '<div class="log-body">' +
+          '<h4>' + (x.url
+              ? '<a href="' + esc(x.url) + '" target="_blank" rel="noopener">' + esc(val(x.title)) + '</a>'
+              : esc(val(x.title))) + '</h4>' +
+          (val(x.note) ? '<p>' + esc(val(x.note)) + '</p>' : "") +
+        '</div>' +
+        (x.state ? '<div class="log-state">' + esc(x.state) + '</div>' : "<div></div>")));
+    });
 }
 
-function renderDirections() {
-  const host = $("#dir-steps");
+function renderFlow() {
+  const host = $("#flow");
   host.innerHTML = "";
-  CONTENT.directions.forEach((d, i) => {
-    const s = el("article", "step");
-    s.innerHTML =
-      '<span class="n" aria-hidden="true">' + String(i + 1).padStart(2, "0") + '</span>' +
-      '<div><h3>' + esc(val(d.title)) + '</h3><p>' + esc(val(d.note)) + '</p></div>';
-    host.appendChild(s);
+  CONTENT.flow.forEach((s) => {
+    host.appendChild(el("div", "fstep",
+      '<b>' + esc(val(s.label)) + '</b><span>' + esc(val(s.note)) + '</span>'));
   });
 }
 
@@ -1583,20 +1498,7 @@ function renderNow() {
     host.appendChild(el("div", "now-item",
       '<span class="bar" aria-hidden="true"></span>' + esc(val(item))));
   });
-
-  const sep = state.lang === "fa" ? "، " : " · ";
-  $("#now-also").textContent = CONTENT.nowAlso.map(val).join(sep);
   $("#now-stamp").textContent = val(CONTENT.nowStamp);
-}
-
-function emptyPanel(message) {
-  const box = el("div", "empty");
-  box.innerHTML =
-    '<div class="mark" aria-hidden="true">' +
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
-      '<path d="M4 12h4l2-5 3 10 2.5-7 1.5 2h3"/></svg>' +
-    '</div><p>' + esc(message) + '</p>';
-  return box;
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -1608,16 +1510,13 @@ function applyLanguage() {
   root.lang = state.lang;
   root.dir  = state.lang === "fa" ? "rtl" : "ltr";
 
-  // static text nodes
   $$("[data-i18n]").forEach((node) => {
-    const key = node.getAttribute("data-i18n");
-    const str = t(key);
-    // a few strings carry inline <strong>; those keys are authored by us, not user input
+    const str = t(node.getAttribute("data-i18n"));
+    // only our own strings carry markup (<strong>), never user input
     if (str.indexOf("<") > -1) node.innerHTML = str;
     else node.textContent = str;
   });
 
-  // translated aria-labels
   $$("[data-i18n-aria-label]").forEach((node) => {
     node.setAttribute("aria-label", t(node.getAttribute("data-i18n-aria-label")));
   });
@@ -1629,12 +1528,10 @@ function applyLanguage() {
   const og = document.querySelector('meta[property="og:locale"]');
   if (og) og.setAttribute("content", state.lang === "fa" ? "fa_IR" : "en_US");
 
-  // dynamic sections carry translated content too
   renderFocus();
-  renderFilters();
-  renderProjects();
-  renderExperiments();
-  renderDirections();
+  renderWork();
+  renderResearch();
+  renderFlow();
   renderNow();
 }
 
@@ -1688,7 +1585,6 @@ function initReveal() {
 
   items.forEach((n) => io.observe(n));
 
-  // hero rises immediately, staggered
   $$(".hero [data-rise]").forEach((n, i) => {
     n.style.transitionDelay = (i * 70) + "ms";
     requestAnimationFrame(() => n.classList.add("shown"));
