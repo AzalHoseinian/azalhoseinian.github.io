@@ -22,7 +22,7 @@ Append an object to `CONTENT.projects`:
 ```js
 {
   title: "project-name",
-  url: "https://github.com/AzamHosseinian/project-name",
+  url: "https://github.com/AzalHoseinian/project-name",
   desc: { en: "One honest sentence.", fa: "یک جملهٔ دقیق." },
   tags: ["Python", "Healthcare Data"],
   category: "healthcare",   // "healthcare" | "software"
