@@ -33,6 +33,7 @@
   --accent-2:  #8b6cff;
   --glow-a:    rgba(255,145,66,.20);
   --glow-b:    rgba(139,108,255,.18);
+  --nav-bg:    rgba(12,12,16,.74);
   --grain:     .035;
 
   --serif: "Instrument Serif", Georgia, serif;
@@ -56,6 +57,7 @@ html[data-theme="light"] {
   --accent-2:  #6340e8;
   --glow-a:    rgba(255,145,66,.22);
   --glow-b:    rgba(139,108,255,.16);
+  --nav-bg:    rgba(255,255,255,.76);
   --grain:     .022;
 }
 
@@ -169,7 +171,7 @@ nav {
   padding: .3rem;
   border: 1px solid var(--line);
   border-radius: 999px;
-  background: color-mix(in srgb, var(--bg) 72%, transparent);
+  background: var(--nav-bg);
   backdrop-filter: blur(16px) saturate(1.6);
   -webkit-backdrop-filter: blur(16px) saturate(1.6);
   box-shadow: 0 8px 32px rgba(0,0,0,.22);
