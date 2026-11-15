@@ -1084,6 +1084,11 @@ footer { position: relative; z-index: 1; border-top: 1px solid var(--line); padd
           <p data-i18n="about.p2">
             I learn a field by building in it. Everything real is on GitHub.
           </p>
+          <p data-i18n="about.p3">
+            My research interest is personalised behavioural models, or digital twins: how little data
+            an individual model needs, and how to evaluate it honestly against simple baselines.
+            Next: reading and reproducing published benchmarks, logged here step by step.
+          </p>
         </div>
       </div>
     </div>
@@ -1208,7 +1213,17 @@ const CONTENT = {
           Append:
           { date: "2026-09", title: {en,fa}, note: {en,fa},
             state: "in progress", url: "https://github.com/..." }             ---- */
-  experiments: [],
+  experiments: [
+    {
+      date: "2026-11",
+      title: { en: "Fail-closed confirmation for MCP write tools",
+               fa: "تأیید اجباری و ایمن‌به‌شکست برای ابزارهای نوشتنی MCP" },
+      note:  { en: "An MCP tool that can write to GitHub but refuses unless the user confirms in a server-side prompt. Every refusal path is covered by a test. Not yet tried with a real token.",
+               fa: "ابزار MCP که می‌تواند روی GitHub بنویسد ولی بدون تأیید کاربر در یک پنجرهٔ سمت سرور امتناع می‌کند. هر مسیر امتناع تست دارد. هنوز با توکن واقعی امتحان نشده است." },
+      state: "in progress",
+      url: "https://github.com/AzalHoseinian/repomind-mcp"
+    },
+  ],
   logYear: "2026",
 
   /* ---- The working loop, rendered as the flow diagram. ---- */
@@ -1279,6 +1294,7 @@ const UI = {
     "about.title": "About",
     "about.p1": "I hold a bachelor's degree in <strong>Computer Software Engineering</strong> and work as a software developer. My focus now is <strong>AI in healthcare</strong>.",
     "about.p2": "I learn a field by building in it. Everything real is on GitHub.",
+    "about.p3": "My research interest is personalised behavioural models, or digital twins: how little data an individual model needs, and how to evaluate it honestly against simple baselines. Next: reading and reproducing published benchmarks, logged here step by step.",
 
     "motto.a": "Website — the map",
     "motto.b": "GitHub — the evidence",
@@ -1336,6 +1352,7 @@ const UI = {
     "about.title": "درباره",
     "about.p1": "کارشناسی <strong>مهندسی نرم‌افزار کامپیوتر</strong> دارم و به‌عنوان توسعه‌دهندهٔ نرم‌افزار کار می‌کنم. تمرکز فعلی‌ام <strong>هوش مصنوعی در سلامت</strong> است.",
     "about.p2": "یک حوزه را با ساختن در آن یاد می‌گیرم. هرچه واقعی است، روی گیت‌هاب است.",
+    "about.p3": "علاقهٔ پژوهشی‌ام مدل‌های رفتاری شخصی‌سازی‌شده یا دوقلوهای دیجیتال است: اینکه یک مدل فردی به چه مقدار داده نیاز دارد و چگونه می‌شود آن را صادقانه در برابر خط‌پایه‌های ساده ارزیابی کرد. گام بعدی: مطالعه و بازتولید بنچمارک‌های منتشرشده، و ثبت مرحله‌به‌مرحلهٔ آن‌ها همین‌جا.",
 
     "motto.a": "سایت — نقشه",
     "motto.b": "گیت‌هاب — سند",
